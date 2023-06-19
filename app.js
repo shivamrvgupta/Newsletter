@@ -1,11 +1,22 @@
     const express = require("express");
     const bodyParser = require("body-parser");
     const request = require("request");
+    const nodemailer = require('nodemailer');
     const https = require("https");
     const app = express();
 
     const apiKey = "b6865ac4875820f75700a6ebda101417-us21";
     const audienceKey = "96e137b33e";
+
+
+    const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: 'shivamrvgupta@gmail.com',
+          pass: 'vryonzxsfexgzihc'
+        }
+      });
+
     app.use(bodyParser.urlencoded({ extended: true }));
 
     app.use(express.static("public"));
@@ -14,43 +25,29 @@
         res.sendFile(__dirname + "/signup.html");
     });
 
+
     app.post("/", function (req, res) {
         var firstName = req.body.Fname;
         var lastName = req.body.Lname;
         var email = req.body.Email;
-        
-        var data = {
-            members: [
-                {
-                    email_address: email,
-                    status: "subscribed",
-                    merge_fields: {
-                        FNAME: firstName,
-                        LNAME: lastName,
-                    },
-                },
-            ],
-        };
-
-        const jsonData = JSON.stringify(data);
-        const urlData = "https://us21.api.mailchimp.com/3.0/lists/96e137b33e";
-        const options = {
-            method: "POST",
-            auth:"shivam1:b6865ac4875820f75700a6ebda101417-us21",
-        };
-        const request = https.request(urlData, options, function (response) {
-            if (response.statusCode === 200){
-                res.sendFile(__dirname + "/success.html")
-            }else{
-                res.sendFile(__dirname + "/failure.html")
+    
+        const mailOptions = {
+            from: 'shivamrvgutpa@gmail.com',
+            to: email ,
+            subject: 'Hello from The Yellow Strawberry',
+            text: 'This is the plain text version of the email',
+            html: '<p>This is the HTML version of the email</p>'
+          };
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+              console.log('Error occurred:', error.message);
+              res.sendFile(__dirname + "/failure.html")
+            } else {
+              console.log('Email sent successfully!');
+              res.sendFile(__dirname + "/success.html")
+              console.log('Message ID:', info.messageId);
             }
-            response.on("data", function (data) {
-                console.log(JSON.parse(data));
-            });
-        });
-
-        // request.write(jsonData);
-        request.end();
+          });
     });
 
 
